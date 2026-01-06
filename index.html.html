@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1e293b">
+  <title>Gym Plan</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #1e293b;
+      color: white;
+      padding: 16px;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .header { text-align: center; margin-bottom: 20px; }
+    .header h1 { font-size: 20px; }
+    .header p { color: #94a3b8; font-size: 12px; margin-top: 4px; }
+    .badges { margin-top: 10px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; margin: 2px; }
+    .badge-green { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .badge-blue { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .tab-active { background: #2563eb; color: white; }
+    .tab-inactive { background: rgba(51,65,85,0.5); color: #94a3b8; }
+    
+    /* Cards */
+    .card { background: rgba(15,23,42,0.8); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .card-title { font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px; }
+    
+    /* Week Grid */
+    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .day-btn { position: relative; text-align: center; padding: 10px 4px; border-radius: 10px; cursor: pointer; border: none; }
+    .day-btn-label { display: block; font-size: 10px; font-weight: 600; }
+    .day-btn-icon { font-size: 16px; margin-top: 4px; }
+    .day-gym { background: rgba(249,115,22,0.2); color: #fb923c; }
+    .day-swim { background: rgba(6,182,212,0.2); color: #22d3ee; }
+    .day-active { background: #2563eb !important; color: white !important; }
+    .today-dot { position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; background: #22c55e; border-radius: 50%; border: 2px solid #1e293b; }
+    
+    /* Day Header */
+    .day-header { padding: 16px; margin: -16px -16px 16px -16px; border-radius: 12px 12px 0 0; }
+    .day-header-gym { background: linear-gradient(90deg, rgba(249,115,22,0.15), transparent); }
+    .day-header-swim { background: linear-gradient(90deg, rgba(6,182,212,0.15), transparent); }
+    .day-title { font-weight: bold; font-size: 16px; }
+    .day-meta { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+    .day-focus { display: inline-block; margin-top: 8px; background: rgba(168,85,247,0.2); color: #c084fc; font-size: 11px; padding: 4px 10px; border-radius: 20px; }
+    
+    /* Section Headers */
+    .section-title { font-size: 12px; font-weight: 600; margin: 16px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+    .section-blue { color: #60a5fa; }
+    .section-orange { color: #fb923c; }
+    .section-cyan { color: #22d3ee; }
+    .section-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-blue { background: #3b82f6; }
+    .dot-orange { background: #f97316; }
+    .dot-cyan { background: #06b6d4; }
+    
+    /* Exercise Items */
+    .exercise { background: rgba(51,65,85,0.3); border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; }
+    .exercise-done { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); }
+    .exercise-row { display: flex; justify-content: space-between; align-items: flex-start; }
+    .exercise-left { display: flex; gap: 10px; flex: 1; }
+    .checkbox { width: 22px; height: 22px; border: 2px solid #64748b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; flex-shrink: 0; }
+    .checkbox-checked { background: #22c55e; border-color: #22c55e; }
+    .exercise-info { flex: 1; }
+    .exercise-name { font-size: 14px; font-weight: 500; }
+    .exercise-name-done { color: #4ade80; text-decoration: line-through; }
+    .exercise-muscles { font-size: 11px; color: #a78bfa; margin-top: 2px; }
+    .exercise-notes { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .exercise-phase { font-size: 11px; color: #67e8f9; font-weight: 600; }
+    .exercise-right { text-align: right; flex-shrink: 0; margin-left: 10px; }
+    .exercise-sets { font-size: 13px; font-weight: 600; color: #60a5fa; }
+    .exercise-weight { font-size: 11px; color: #94a3b8; }
+    .exercise-duration { font-size: 13px; font-weight: 600; color: #fb923c; }
+    .exercise-distance { font-size: 13px; font-weight: 600; color: #22d3ee; }
+    
+    /* Cooldown */
+    .cooldown { background: rgba(51,65,85,0.2); border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 13px; color: #94a3b8; }
+    
+    /* Frequency Grid */
+    .freq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .freq-item { display: flex; justify-content: space-between; background: rgba(51,65,85,0.3); padding: 8px 10px; border-radius: 6px; font-size: 11px; }
+    .freq-times { color: #4ade80; font-weight: 600; }
+    .freq-sets { color: #64748b; }
+    
+    /* Calendar */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .cal-title { font-size: 16px; font-weight: 600; }
+    .cal-nav { background: rgba(51,65,85,0.5); border: none; color: white; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 18px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-day-header { text-align: center; font-size: 11px; color: #64748b; padding: 8px 0; font-weight: 600; }
+    .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; cursor: pointer; background: rgba(51,65,85,0.3); }
+    .cal-day-other { opacity: 0.25; }
+    .cal-day-today { border: 2px solid #3b82f6; }
+    .cal-day-future { opacity: 0.4; cursor: default; }
+    .cal-day-completed { background: rgba(34,197,94,0.2); }
+    .cal-day-completed .cal-num { color: #4ade80; }
+    .cal-day-missed { background: rgba(239,68,68,0.2); }
+    .cal-day-missed .cal-num { color: #f87171; }
+    .cal-num { font-weight: 600; }
+    .cal-icon { font-size: 14px; }
+    
+    .cal-legend { display: flex; justify-content: center; gap: 20px; margin-top: 16px; font-size: 11px; color: #94a3b8; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+    .legend-green { background: rgba(34,197,94,0.4); }
+    .legend-red { background: rgba(239,68,68,0.4); }
+    
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat-box { background: rgba(51,65,85,0.4); border-radius: 10px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: bold; }
+    .stat-green { color: #4ade80; }
+    .stat-red { color: #f87171; }
+    .stat-blue { color: #60a5fa; }
+    .stat-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+    
+    /* Modal */
+    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal-open { display: flex; }
+    .modal-content { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 16px; padding: 20px; max-width: 340px; width: 100%; max-height: 70vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .modal-title { font-size: 15px; font-weight: bold; }
+    .modal-close { background: rgba(51,65,85,0.5); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    .modal-subtitle { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+    .modal-exercise { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(51,65,85,0.3); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+    .modal-icon-green { color: #4ade80; }
+    .modal-icon-red { color: #f87171; }
+    
+    .hidden { display: none; }
+    .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💪 Old Factory Gym Plan</h1>
+  <p>20-Week Programme • Full Body 2x Frequency</p>
+  <div class="badges">
+    <span class="badge badge-green">⚡ Each Muscle 2-3x/Week</span>
+    <span class="badge badge-blue">📈 Weights First</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab tab-active" id="tabWorkout" onclick="showTab('workout')">🏋️ Workout</button>
+  <button class="tab tab-inactive" id="tabCalendar" onclick="showTab('calendar')">📅 Calendar</button>
+</div>
+
+<div id="workoutSection">
+  <div class="card">
+    <div class="card-title">📅 This Week</div>
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+  <div class="card" id="dayContent"></div>
+  <div class="card">
+    <div class="card-title">📊 Weekly Muscle Frequency</div>
+    <div class="freq-grid">
+      <div class="freq-item"><span>Chest</span><span><span class="freq-times">3x</span> <span class="freq-sets">(9 sets)</span></span></div>
+      <div class="freq-item"><span>Back</span><span><span class="freq-times">3x</span> <span class="freq-sets">(9 sets)</span></span></div>
+      <div class="freq-item"><span>Shoulders</span><span><span class="freq-times">3x</span> <span class="freq-sets">(9 sets)</span></span></div>
+      <div class="freq-item"><span>Quads</span><span><span class="freq-times">3x</span> <span class="freq-sets">(10 sets)</span></span></div>
+      <div class="freq-item"><span>Hamstrings</span><span><span class="freq-times">3x</span> <span class="freq-sets">(9 sets)</span></span></div>
+      <div class="freq-item"><span>Core</span><span><span class="freq-times">3x</span> <span class="freq-sets">(9 sets)</span></span></div>
+      <div class="freq-item"><span>Biceps</span><span><span class="freq-times">2x</span> <span class="freq-sets">(6 sets)</span></span></div>
+      <div class="freq-item"><span>Triceps</span><span><span class="freq-times">2x</span> <span class="freq-sets">(6 sets)</span></span></div>
+    </div>
+  </div>
+</div>
+
+<div id="calendarSection" class="hidden">
+  <div class="card">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+      <span class="cal-title" id="calTitle">January 2026</span>
+      <button class="cal-nav" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot legend-green"></div>Completed</div>
+      <div class="legend-item"><div class="legend-dot legend-red"></div>Missed</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Monthly Stats</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-value stat-green" id="statDone">0</div><div class="stat-label">Completed</div></div>
+      <div class="stat-box"><div class="stat-value stat-red" id="statMissed">0</div><div class="stat-label">Missed</div></div>
+      <div class="stat-box"><div class="stat-value stat-blue" id="statStreak">0</div><div class="stat-label">Streak 🔥</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Day Details</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="footer">Tap exercises to mark complete • Saves automatically</div>
+
+<script>
+// Schedule Data
+var schedule = {
+  monday: {
+    title: "Monday — Full Body A",
+    type: "gym",
+    time: "6:15-8:00am",
+    location: "Old Factory",
+    focus: "Chest & Quads emphasis",
+    weights: [
+      {name: "Chest Press Machine", sets: 3, reps: "10-12", weight: "20kg", muscles: "Chest, Triceps"},
+      {name: "Lat Pulldown", sets: 3, reps: "10-12", weight: "25kg", muscles: "Back, Biceps"},
+      {name: "Shoulder Press Machine", sets: 3, reps: "10-12", weight: "15kg", muscles: "Shoulders, Triceps"},
+      {name: "Leg Press", sets: 3, reps: "10-12", weight: "50kg", muscles: "Quads, Glutes"},
+      {name: "Leg Curl Machine", sets: 3, reps: "10-12", weight: "20kg", muscles: "Hamstrings"},
+      {name: "Tricep Pushdown", sets: 3, reps: "12-15", weight: "10kg", muscles: "Triceps"},
+      {name: "Plank", sets: 3, reps: "30-45s", weight: "BW", muscles: "Core"}
+    ],
+    cardio: [
+      {name: "Treadmill Pyramid", duration: "20 min", notes: "10 walk / 2 run / 8 walk / 2 run..."},
+      {name: "Stair Climber", duration: "10 min", notes: "Level 5-7"}
+    ]
+  },
+  tuesday: {
+    title: "Tuesday — Swimming",
+    type: "swim",
+    time: "6:30-7:55am",
+    location: "Riverside Pool",
+    total: "400-600m",
+    workout: [
+      {phase: "Warm-up", name: "Easy freestyle", distance: "100m"},
+      {phase: "Main Set", name: "Freestyle", distance: "4×50m"},
+      {phase: "Main Set", name: "Backstroke", distance: "4×25m"},
+      {phase: "Cool-down", name: "Mixed strokes", distance: "100m"}
+    ]
+  },
+  wednesday: {
+    title: "Wednesday — Full Body B",
+    type: "gym",
+    time: "6:15-8:00am",
+    location: "Old Factory",
+    focus: "Back & Hamstrings emphasis",
+    weights: [
+      {name: "Seated Row Machine", sets: 3, reps: "10-12", weight: "25kg", muscles: "Back, Biceps"},
+      {name: "Pec Deck / Chest Fly", sets: 3, reps: "12-15", weight: "15kg", muscles: "Chest"},
+      {name: "Rear Delt Fly Machine", sets: 3, reps: "12-15", weight: "10kg", muscles: "Rear Delts"},
+      {name: "Face Pulls", sets: 3, reps: "15", weight: "10kg", muscles: "Rear Delts, Upper Back"},
+      {name: "Leg Extension", sets: 3, reps: "12-15", weight: "20kg", muscles: "Quads"},
+      {name: "Leg Curl Machine", sets: 3, reps: "10-12", weight: "20kg", muscles: "Hamstrings"},
+      {name: "Bicep Curl (Dumbbells)", sets: 3, reps: "12-15", weight: "8kg", muscles: "Biceps"},
+      {name: "Cable Crunch", sets: 3, reps: "15", weight: "15kg", muscles: "Abs"}
+    ],
+    cardio: [
+      {name: "Rowing Machine", duration: "15 min", notes: "22-26 SPM, steady"},
+      {name: "Incline Treadmill Walk", duration: "15 min", notes: "8-12% incline"}
+    ]
+  },
+  thursday: {
+    title: "Thursday — Swimming",
+    type: "swim",
+    time: "6:30-7:55am",
+    location: "Riverside Pool",
+    total: "400-600m",
+    workout: [
+      {phase: "Warm-up", name: "Easy freestyle", distance: "100m"},
+      {phase: "Main Set", name: "Freestyle", distance: "4×50m"},
+      {phase: "Main Set", name: "Breaststroke", distance: "4×25m"},
+      {phase: "Cool-down", name: "Mixed strokes", distance: "100m"}
+    ]
+  },
+  friday: {
+    title: "Friday — Full Body C",
+    type: "gym",
+    time: "6:15-8:00am",
+    location: "Old Factory",
+    focus: "Legs & Shoulders emphasis",
+    weights: [
+      {name: "Leg Press (Wide Stance)", sets: 4, reps: "10-12", weight: "50kg", muscles: "Quads, Glutes, Adductors"},
+      {name: "Leg Curl Machine", sets: 3, reps: "12-15", weight: "22kg", muscles: "Hamstrings"},
+      {name: "Hip Adductor", sets: 3, reps: "15", weight: "25kg", muscles: "Inner Thigh"},
+      {name: "Hip Abductor", sets: 3, reps: "15", weight: "25kg", muscles: "Outer Glutes"},
+      {name: "Calf Raise Machine", sets: 3, reps: "15-20", weight: "30kg", muscles: "Calves"},
+      {name: "Lateral Raise (Dumbbells)", sets: 3, reps: "12-15", weight: "5kg", muscles: "Side Delts"},
+      {name: "Incline Chest Press", sets: 3, reps: "10-12", weight: "15kg", muscles: "Upper Chest"},
+      {name: "Lat Pulldown (Close Grip)", sets: 3, reps: "10-12", weight: "22kg", muscles: "Back, Biceps"},
+      {name: "Tricep Pushdown", sets: 3, reps: "12-15", weight: "12kg", muscles: "Triceps"},
+      {name: "Bicep Curl (Dumbbells)", sets: 3, reps: "12-15", weight: "8kg", muscles: "Biceps"},
+      {name: "Plank + Side Plank", sets: 3, reps: "30s each", weight: "BW", muscles: "Core, Obliques"}
+    ],
+    cardio: [
+      {name: "Stair Climber HIIT", duration: "15 min", notes: "1 min fast / 1 min slow"},
+      {name: "Treadmill Walk", duration: "10 min", notes: "Cool down"}
+    ]
+  },
+  saturday: {
+    title: "Saturday — Light Gym",
+    type: "gym",
+    time: "8:30-10:00am",
+    location: "Old Factory",
+    focus: "Recovery (Alternate Weeks)",
+    weights: [
+      {name: "Goblet Squats", sets: 2, reps: "15", weight: "10kg", muscles: "Lower Body"},
+      {name: "Cable Rows (Light)", sets: 2, reps: "15", weight: "15kg", muscles: "Back"},
+      {name: "Push-ups", sets: 2, reps: "Max", weight: "BW", muscles: "Chest, Triceps"},
+      {name: "Face Pulls (Light)", sets: 2, reps: "20", weight: "8kg", muscles: "Rear Delts"},
+      {name: "Stretching & Mobility", sets: 1, reps: "15 min", weight: "-", muscles: "Full Body"}
+    ],
+    cardio: [
+      {name: "Incline Treadmill Walk", duration: "25-30 min", notes: "5-8% incline, zone 2"}
+    ]
+  },
+  sunday: {
+    title: "Sunday — Recovery Swim",
+    type: "swim",
+    time: "8:30-9:30am",
+    location: "Riverside Pool",
+    total: "300-400m",
+    workout: [
+      {phase: "Recovery", name: "Easy mixed strokes", distance: "300-400m"}
+    ]
+  }
+};
+
+var daysOrder = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+var dayLabels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+var today = (function() {
+  var d = new Date().getDay();
+  return daysOrder[d === 0 ? 6 : d - 1];
+})();
+
+var currentDay = today;
+var viewMonth = new Date().getMonth();
+var viewYear = new Date().getFullYear();
+var completed = {};
+var calendarData = {};
+
+function dateKey(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function loadData() {
+  try {
+    var raw = localStorage.getItem("gymPlanV9");
+    if (raw) {
+      var data = JSON.parse(raw);
+      calendarData = data.calendar || {};
+      var lastDate = data.lastDate;
+      var todayStr = new Date().toDateString();
+      
+      if (lastDate && lastDate !== todayStr) {
+        var yesterday = new Date(lastDate);
+        var yDayName = daysOrder[yesterday.getDay() === 0 ? 6 : yesterday.getDay() - 1];
+        var yKey = dateKey(yesterday);
+        var ySchedule = schedule[yDayName];
+        
+        if (ySchedule && data.completed) {
+          var total = ySchedule.type === "gym" ? ySchedule.weights.length + ySchedule.cardio.length : ySchedule.workout.length;
+          var doneCount = 0;
+          for (var k in data.completed) {
+            if (k.indexOf(yDayName + "-") === 0 && data.completed[k]) doneCount++;
+          }
+          calendarData[yKey] = {status: doneCount > 0 ? "completed" : "missed", done: doneCount, total: total};
+        }
+        completed = {};
+      } else {
+        completed = data.completed || {};
+      }
+      saveData();
+    }
+  } catch (e) {
+    console.log("Load error:", e);
+  }
+}
+
+function saveData() {
+  localStorage.setItem("gymPlanV9", JSON.stringify({
+    completed: completed,
+    calendar: calendarData,
+    lastDate: new Date().toDateString()
+  }));
+}
+
+function showTab(tab) {
+  document.getElementById("tabWorkout").className = "tab " + (tab === "workout" ? "tab-active" : "tab-inactive");
+  document.getElementById("tabCalendar").className = "tab " + (tab === "calendar" ? "tab-active" : "tab-inactive");
+  document.getElementById("workoutSection").className = tab === "workout" ? "" : "hidden";
+  document.getElementById("calendarSection").className = tab === "calendar" ? "" : "hidden";
+  if (tab === "calendar") renderCalendar();
+}
+
+function selectDay(day) {
+  currentDay = day;
+  renderWeek();
+  renderDay();
+}
+
+function toggleExercise(key) {
+  completed[key] = !completed[key];
+  
+  var tk = dateKey(new Date());
+  var s = schedule[today];
+  var total = s.type === "gym" ? s.weights.length + s.cardio.length : s.workout.length;
+  var doneCount = 0;
+  for (var k in completed) {
+    if (k.indexOf(today + "-") === 0 && completed[k]) doneCount++;
+  }
+  
+  if (doneCount > 0) {
+    calendarData[tk] = {status: "completed", done: doneCount, total: total};
+  } else {
+    delete calendarData[tk];
+  }
+  
+  saveData();
+  renderDay();
+}
+
+function renderWeek() {
+  var html = "";
+  for (var i = 0; i < 7; i++) {
+    var day = daysOrder[i];
+    var isActive = day === currentDay;
+    var isToday = day === today;
+    var type = schedule[day].type;
+    
+    html += '<div class="day-btn ' + (type === "gym" ? "day-gym" : "day-swim") + (isActive ? " day-active" : "") + '" onclick="selectDay(\'' + day + '\')">';
+    if (isToday) html += '<div class="today-dot"></div>';
+    html += '<span class="day-btn-label">' + dayLabels[i] + '</span>';
+    html += '<span class="day-btn-icon">' + (type === "gym" ? "🏋️" : "🏊") + '</span>';
+    html += '</div>';
+  }
+  document.getElementById("weekGrid").innerHTML = html;
+}
+
+function renderDay() {
+  var d = schedule[currentDay];
+  var isGym = d.type === "gym";
+  
+  var html = '<div class="day-header ' + (isGym ? "day-header-gym" : "day-header-swim") + '">';
+  html += '<div class="day-title">' + (isGym ? "🏋️" : "🏊") + " " + d.title + '</div>';
+  html += '<div class="day-meta">🕐 ' + d.time + ' • 📍 ' + d.location + '</div>';
+  if (d.focus) html += '<div class="day-focus">' + d.focus + '</div>';
+  html += '</div>';
+  
+  if (isGym) {
+    html += '<div class="section-title section-blue"><span class="section-dot dot-blue"></span>WEIGHTS FIRST (' + d.weights.length + ' exercises)</div>';
+    
+    for (var i = 0; i < d.weights.length; i++) {
+      var ex = d.weights[i];
+      var key = currentDay + "-w-" + i;
+      var isDone = completed[key];
+      
+      html += '<div class="exercise' + (isDone ? " exercise-done" : "") + '" onclick="toggleExercise(\'' + key + '\')">';
+      html += '<div class="exercise-row"><div class="exercise-left">';
+      html += '<div class="checkbox' + (isDone ? " checkbox-checked" : "") + '">' + (isDone ? "✓" : "") + '</div>';
+      html += '<div class="exercise-info"><div class="exercise-name' + (isDone ? " exercise-name-done" : "") + '">' + ex.name + '</div>';
+      html += '<div class="exercise-muscles">' + ex.muscles + '</div></div></div>';
+      html += '<div class="exercise-right"><div class="exercise-sets">' + ex.sets + '×' + ex.reps + '</div>';
+      html += '<div class="exercise-weight">' + ex.weight + '</div></div></div></div>';
+    }
+    
+    html += '<div class="section-title section-orange" style="margin-top:16px"><span class="section-dot dot-orange"></span>CARDIO AFTER (' + d.cardio.length + ' exercises)</div>';
+    
+    for (var j = 0; j < d.cardio.length; j++) {
+      var cardio = d.cardio[j];
+      var cardioKey = currentDay + "-c-" + j;
+      var cardioDone = completed[cardioKey];
+      
+      html += '<div class="exercise' + (cardioDone ? " exercise-done" : "") + '" onclick="toggleExercise(\'' + cardioKey + '\')">';
+      html += '<div class="exercise-row"><div class="exercise-left">';
+      html += '<div class="checkbox' + (cardioDone ? " checkbox-checked" : "") + '">' + (cardioDone ? "✓" : "") + '</div>';
+      html += '<div class="exercise-info"><div class="exercise-name' + (cardioDone ? " exercise-name-done" : "") + '">' + cardio.name + '</div>';
+      if (cardio.notes) html += '<div class="exercise-notes">' + cardio.notes + '</div>';
+      html += '</div></div>';
+      html += '<div class="exercise-right"><div class="exercise-duration">' + cardio.duration + '</div></div></div></div>';
+    }
+    
+    html += '<div class="cooldown"><strong>Cool-down:</strong> 5 min static stretching</div>';
+    
+  } else {
+    html += '<div class="section-title section-cyan"><span class="section-dot dot-cyan"></span>SWIM SESSION • ' + d.total + '</div>';
+    
+    for (var k = 0; k < d.workout.length; k++) {
+      var swim = d.workout[k];
+      var swimKey = currentDay + "-s-" + k;
+      var swimDone = completed[swimKey];
+      
+      html += '<div class="exercise' + (swimDone ? " exercise-done" : "") + '" onclick="toggleExercise(\'' + swimKey + '\')">';
+      html += '<div class="exercise-row"><div class="exercise-left">';
+      html += '<div class="checkbox' + (swimDone ? " checkbox-checked" : "") + '">' + (swimDone ? "✓" : "") + '</div>';
+      html += '<div class="exercise-info"><div class="exercise-phase">' + swim.phase + '</div>';
+      html += '<div class="exercise-name' + (swimDone ? " exercise-name-done" : "") + '">' + swim.name + '</div></div></div>';
+      html += '<div class="exercise-right"><div class="exercise-distance">' + swim.distance + '</div></div></div></div>';
+    }
+  }
+  
+  document.getElementById("dayContent").innerHTML = html;
+}
+
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById("calTitle").textContent = monthNames[viewMonth] + " " + viewYear;
+  
+  var html = "";
+  var headers = ["M", "T", "W", "T", "F", "S", "S"];
+  for (var h = 0; h < headers.length; h++) {
+    html += '<div class="cal-day-header">' + headers[h] + '</div>';
+  }
+  
+  var firstDay = new Date(viewYear, viewMonth, 1);
+  var lastDay = new Date(viewYear, viewMonth + 1, 0);
+  var startPad = (firstDay.getDay() + 6) % 7;
+  var now = new Date();
+  var nowKey = dateKey(now);
+  
+  var prevLast = new Date(viewYear, viewMonth, 0).getDate();
+  for (var p = startPad - 1; p >= 0; p--) {
+    html += '<div class="cal-day cal-day-other"><span class="cal-num">' + (prevLast - p) + '</span></div>';
+  }
+  
+  var completedCount = 0;
+  var missedCount = 0;
+  
+  for (var day = 1; day <= lastDay.getDate(); day++) {
+    var date = new Date(viewYear, viewMonth, day);
+    var key = dateKey(date);
+    var isToday = key === nowKey;
+    var isFuture = date > now;
+    var data = calendarData[key];
+    var dayName = daysOrder[date.getDay() === 0 ? 6 : date.getDay() - 1];
+    
+    var cls = "cal-day";
+    var icon = "";
+    
+    if (isToday) cls += " cal-day-today";
+    if (isFuture) {
+      cls += " cal-day-future";
+    } else if (data) {
+      if (data.status === "completed") {
+        cls += " cal-day-completed";
+        icon = '<span class="cal-icon" style="color:#4ade80">✓</span>';
+        completedCount++;
+      } else {
+        cls += " cal-day-missed";
+        icon = '<span class="cal-icon" style="color:#f87171">✗</span>';
+        missedCount++;
+      }
+    }
+    
+    html += '<div class="' + cls + '" onclick="openModal(\'' + key + '\',\'' + dayName + '\',\'' + date.toDateString() + '\')">';
+    html += '<span class="cal-num">' + day + '</span>' + icon + '</div>';
+  }
+  
+  var cells = startPad + lastDay.getDate();
+  var remaining = cells <= 35 ? 35 - cells : 42 - cells;
+  for (var n = 1; n <= remaining; n++) {
+    html += '<div class="cal-day cal-day-other"><span class="cal-num">' + n + '</span></div>';
+  }
+  
+  document.getElementById("calGrid").innerHTML = html;
+  
+  var streak = 0;
+  if (calendarData[nowKey] && calendarData[nowKey].status === "completed") streak++;
+  var checkDate = new Date(now);
+  checkDate.setDate(checkDate.getDate() - 1);
+  while (calendarData[dateKey(checkDate)] && calendarData[dateKey(checkDate)].status === "completed") {
+    streak++;
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+  
+  document.getElementById("statDone").textContent = completedCount;
+  document.getElementById("statMissed").textContent = missedCount;
+  document.getElementById("statStreak").textContent = streak;
+}
+
+function openModal(key, dayName, dateStr) {
+  var data = calendarData[key];
+  var s = schedule[dayName];
+  if (!s) return;
+  
+  document.getElementById("modalTitle").textContent = s.title;
+  document.getElementById("modalSubtitle").textContent = dateStr;
+  
+  var html = "";
+  if (data) {
+    html += '<div style="font-size:12px;color:#94a3b8;margin-bottom:12px">' + data.done + ' of ' + data.total + ' exercises completed</div>';
+    var exercises = s.type === "gym" ? s.weights.concat(s.cardio) : s.workout;
+    for (var i = 0; i < exercises.length; i++) {
+      var isDone = i < data.done;
+      html += '<div class="modal-exercise"><span class="' + (isDone ? "modal-icon-green" : "modal-icon-red") + '">' + (isDone ? "✓" : "✗") + '</span><span>' + exercises[i].name + '</span></div>';
+    }
+  } else {
+    html = '<div style="text-align:center;padding:20px;color:#64748b">No data for this day</div>';
+  }
+  
+  document.getElementById("modalBody").innerHTML = html;
+  document.getElementById("modal").className = "modal modal-open";
+}
+
+function closeModal() {
+  document.getElementById("modal").className = "modal";
+}
+
+document.getElementById("modal").onclick = function(e) {
+  if (e.target === this) closeModal();
+};
+
+// Initialize
+loadData();
+renderWeek();
+renderDay();
+</script>
+</body>
+</html>
